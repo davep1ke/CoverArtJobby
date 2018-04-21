@@ -30,13 +30,13 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\OwnCloud\Code\builds\CoverArtJobby\</OutputPath>
-	<AllowedReferenceRelatedFileExtensions>
+    <OutputPath>..\..\..\..\OwnCloud\Code\builds\CoverArtJobby\</OutputPath>
+    <AllowedReferenceRelatedFileExtensions>
       <!-- Prevent default XML and PDB files copied to output in RELEASE. 
            Only *.allowedextension files will be included, which doesn't exist in my case.
        -->
       .allowedextension
-    </AllowedReferenceRelatedFileExtensions> 
+    </AllowedReferenceRelatedFileExtensions>
     <DefineConstants>
     </DefineConstants>
     <ErrorReport>prompt</ErrorReport>

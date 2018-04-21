@@ -372,7 +372,7 @@ namespace CoverArtJobby
                     Tag_File.Text = fi.Name;
 
                     
-                    if (file.TagHandler.Picture != null)
+                    if ( file.TagHandler.Picture != null)
                     {
                         SetImageFromBitmap(file.TagHandler.Picture, false);
                     }
@@ -396,10 +396,14 @@ namespace CoverArtJobby
 
                     file = null;
                 }
-                catch (Exception e)
+                catch (System.IO.IOException)
+                {
+                    MessageBox.Show("Error reading file.");
+                }
+                /*catch (Exception e)
                 {
                     MessageBox.Show(e.ToString());
-                }
+                }*/
 
             }
             else
@@ -552,6 +556,7 @@ namespace CoverArtJobby
 
                 System.Drawing.Image image = Tag_Image.Tag as System.Drawing.Image;
                 //Bitmap b = Tag_Image.Tag as Bitmap;
+                
                 file.TagHandler.Picture = image;
             }
 
