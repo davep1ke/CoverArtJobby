@@ -398,7 +398,7 @@ namespace CoverArtJobby
                 }
                 catch (System.IO.IOException)
                 {
-                    MessageBox.Show("Error reading file.");
+                    lbl_status.Text = "Error reading file.";
                 }
                 /*catch (Exception e)
                 {
@@ -450,8 +450,8 @@ namespace CoverArtJobby
             }
             catch (Exception e)
             {
-                //MessageBox.Show(e.ToString());
-                    return false;
+                lbl_status.Text = "Error grabbing image: " + e.ToString();
+                return false;
             }
         }
 
@@ -601,7 +601,7 @@ namespace CoverArtJobby
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                lbl_status.Text = "Backup File already exists!";
             }
         }
 

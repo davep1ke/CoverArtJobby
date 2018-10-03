@@ -14,7 +14,7 @@
                 </Style>
             </TreeView.ItemContainerStyle>
         </TreeView>
-        <ListBox HorizontalAlignment="Left" Margin="12,281,0,0" Name="FileList" VerticalAlignment="Stretch" Width="266" SelectionMode="Extended" SelectionChanged="FileList_SelectionChanged" />
+        <ListBox HorizontalAlignment="Left" Margin="12,281,0,36" Name="FileList" Width="266" SelectionMode="Extended" SelectionChanged="FileList_SelectionChanged" />
         <GroupBox Header="Current Tag" Height="235" HorizontalAlignment="Left" Margin="284,18,0,0" Name="grpCurrentTag" VerticalAlignment="Top" Width="396">
             <Grid>
                 <Label Content="File" Height="28" HorizontalAlignment="Left" Margin="12,44,0,0" Name="label1" VerticalAlignment="Top" />
@@ -40,15 +40,18 @@
         <Button Content="Save _Tag" Height="23" HorizontalAlignment="Right" Margin="0,137,8,0" Name="btnSaveTag" VerticalAlignment="Top" Width="124" Click="btnSaveTag_Click" />
         <Button Content="Save Tag &amp; Ne_xt" Height="23" HorizontalAlignment="Right" Margin="0,166,8,0" Name="btn_SaveAndNext" VerticalAlignment="Top" Width="124" Click="btn_SaveAndNext_Click" />
         <Button Content="Save &amp; _Next Empty" Height="23" HorizontalAlignment="Right" Margin="0,195,8,0" Name="btn_SaveNextEmpty" VerticalAlignment="Top" Width="124" Click="btn_SaveNextEmpty_Click" />
-        
+
         <Button Content="Next _Empty" Height="23" HorizontalAlignment="Right" Margin="0,224,8,0" Name="btnNextEmpty" VerticalAlignment="Top" Width="124" Click="btnNextEmpty_Click" />
         <CheckBox Content="Keep Backup?" Height="16" HorizontalAlignment="Right" Margin="0,18,13,0" Name="chk_Backup" VerticalAlignment="Top" Width="120" IsChecked="True" />
         <TextBox Height="23" Margin="0,36,36,0" Name="txtBackupFolder" VerticalAlignment="Top" HorizontalAlignment="Right" Width="96" />
         <Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,36,13,0" Name="btnPickFolder" VerticalAlignment="Top" Width="17" Click="btnPickFolder_Click" />
         <Frame x:Name="webFrame" Content="Frame" HorizontalAlignment="Stretch" Margin="290,259,12,41" VerticalAlignment="Stretch" />
+        <StatusBar x:Name="w_status" Margin="0,723,415,0">
+            <TextBlock x:Name="lbl_status" Width="158" TextTrimming="CharacterEllipsis"/>
+        </StatusBar>
 
         <!--WebBrowser HorizontalAlignment="Stretch" Margin="290,259,12,41" Name="webFrame" VerticalAlignment="Stretch" GotFocus="webFrame_GotFocus" LostFocus="webFrame_LostFocus" /-->
 
-        
+
     </Grid>
 </Window>
