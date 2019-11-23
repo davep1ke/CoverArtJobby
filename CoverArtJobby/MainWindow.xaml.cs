@@ -31,7 +31,6 @@ namespace CoverArtJobby
     {
         private bool imageUpdated = false;
         private bool tagsUpdated = false;
-        private bool browserHasFocus = false;
         public bool runInBackground = false;
         Mp3File file = null;
 
@@ -261,7 +260,7 @@ namespace CoverArtJobby
             {
                 //select our first file, and scan for a file without an image
                 FileList.SelectedIndex = 0;
-                if (selectNextItem(true, true))
+                if (selectNextItem(true, true, false))
                 {
                     this.Show();
                 }
@@ -282,23 +281,37 @@ namespace CoverArtJobby
         /// Scans for the next file. Returns false if no files found
         /// </summary>
         /// <param name="missingArt">Only stops when we find a file with missing art</param>
-        /// <param name="startAtOne">Check the current file as well</param>
-        public bool selectNextItem(bool missingArt, bool startAtZero)
+        /// <param name="startAtZero">Check the current file as well</param>
+        /// <param name="removeCurrent">Removes the current item from the list first. OVerrides SAZ</param>
+        public bool selectNextItem(bool missingArt, bool startAtZero, bool removeCurrent)
         {
             int currentIndex = FileList.SelectedIndex;
 
             bool firstItem = true;
             bool exit = false;
             bool invalidTag = false;
-            while(exit == false && currentIndex > -1 && currentIndex < FileList.Items.Count - 1)
+            
+
+            while (exit == false && currentIndex > -1 && currentIndex < FileList.Items.Count - 1)
             {
                 invalidTag = false;
+                //Remove the current item if flagged. 
+                if (firstItem && removeCurrent)
+                {
+                    //you can't scan the current file AND remove it. Well you can, but you would be stupid. 
+                    startAtZero = false;
+                    //we dont really remove it, just refresh the list and have a "fake" index. 
+                    populateFileList();
+                    currentIndex--;
+                }
+                
                 if (firstItem && startAtZero)
                 {
                     currentIndex--;
                 }
                 firstItem = false;
                 currentIndex++;
+
                 //open the file (peek at it, then close, to make sure we don't OOM
                 FileInfo fi = FileList.Items[currentIndex] as FileInfo;
                 Mp3File peekFile = new Mp3File(fi);
@@ -317,10 +330,15 @@ namespace CoverArtJobby
                     MessageBox.Show("Invalid tag on " + peekFile.FileName + " - " + e.Message);
                     invalidTag = true;
                 }
+                catch (System.IO.IOException e)
+                {
+                    MessageBox.Show("IO Error on " + peekFile.FileName + " - " + e.Message);
+                    invalidTag = true;
+                }
 
                 //if we are not looking for artwork, exit
                 //or, if we have a valid tag, and it has a pic, exit 
-                
+
                 if (missingArt) //looking for next file with missing artwork
                 {
                     //skip invalid tags
@@ -551,9 +569,14 @@ namespace CoverArtJobby
 
         public void saveTags()
         {
+            if (file == null)
+            {
+                lbl_status.Text = "No file is currently selected!";
+                return;
+            }
+
             if (imageUpdated)
             {
-
                 System.Drawing.Image image = Tag_Image.Tag as System.Drawing.Image;
                 //Bitmap b = Tag_Image.Tag as Bitmap;
                 
@@ -566,42 +589,51 @@ namespace CoverArtJobby
                 file.TagHandler.Artist = Tag_Artist.Text;
                 file.TagHandler.Song = Tag_Song.Text;
             }
-            try
+            
+            //check our paths exist and files don't before we start. 
+            string bakName = System.IO.Path.ChangeExtension(file.FileName, "bak");
+            FileInfo bakfile = new FileInfo(bakName);
+            string backupLocation = backupDirectory.FullName + @"\" + System.IO.Path.GetFileName(file.FileName);
+
+            if (backupDirectory.Exists == false)
             {
-
-                file.Update();
-
-                //move / delete any bak files
-                string bakName = System.IO.Path.ChangeExtension(file.FileName, "bak");
-                FileInfo bakfile = new FileInfo(bakName);
-                if (bakfile.Exists)
-                {
-                    if (chk_Backup.IsChecked == true)
-                    {
-                        string location = backupDirectory.FullName + @"\" + System.IO.Path.GetFileName(file.FileName);
-                        bakfile.MoveTo(location);
-                    }
-                    else
-                    {
-                        bakfile.Delete();
-                    }
-                }
-
-                
-                //move file to output folder (if selected)
-                if (destinationDirectory != null)
-                {
-                    FileInfo fi = new FileInfo(file.FileName);
-                    file = null;
-                    fi.MoveTo(destinationDirectory.FullName + "\\" + fi.Name);
-                }
-
-
-
+                lbl_status.Text = "Backup Directory does not exist!";
+                return;
             }
-            catch (Exception ex)
+            //if it's null, it was never set, therefore we dont move the file. If its !exists, it was set, but isnt a valid folder. 
+            if (destinationDirectory != null && destinationDirectory.Exists == false)
             {
-                lbl_status.Text = "Backup File already exists!";
+                lbl_status.Text = "Destination Directory does not exist!";
+                return;
+            }
+
+
+            //save the file. Creates a .bak in the source dir
+            file.Update();
+
+            //move / delete any bak files                
+            if (bakfile.Exists)
+            {
+                if (chk_Backup.IsChecked == true)
+                {
+                    bakfile.MoveTo(backupLocation);
+                }
+                else
+                {
+                    bakfile.Delete();
+                }
+            }
+
+
+            //move file to output folder (if selected)
+            //if it's null, it was never set, therefore we dont move the file. If its !exists, it was set, but isnt a valid folder. 
+            if (destinationDirectory != null)
+            {
+                FileInfo fi = new FileInfo(file.FileName);
+                file = null;
+                fi.MoveTo(destinationDirectory.FullName + "\\" + fi.Name);
+                    
+                   
             }
         }
 
@@ -707,7 +739,10 @@ namespace CoverArtJobby
             if (validPress())
             {
                 saveTags();
-                selectNextItem(true, false);
+                //we've moved the original, so remove from the list
+                int currentIndex = FileList.SelectedIndex;
+                FileList.SelectedIndex = currentIndex;
+                selectNextItem(true, false, true);
                 autoSearch();
             }
         }
@@ -717,7 +752,7 @@ namespace CoverArtJobby
             //remove the accidental presses due to the goddawfull handling of focus in the webbrowser
             if (validPress())
             {
-                selectNextItem(true, false);
+                selectNextItem(true, false, false);
                 autoSearch();
             }
         }
@@ -728,7 +763,7 @@ namespace CoverArtJobby
             if (validPress())
             {
                 saveTags();
-                selectNextItem(false, false);
+                selectNextItem(false, false, true);
                 autoSearch();
             }
         }
