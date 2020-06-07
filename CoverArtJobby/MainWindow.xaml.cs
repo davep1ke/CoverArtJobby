@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Web;
 using System.Net;
 using Id3Lib;
+using System.Reflection;
 using Mp3Lib;
 
 namespace CoverArtJobby
@@ -30,6 +31,11 @@ namespace CoverArtJobby
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static string userAgent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko";
+        // "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/6.0;)"; 
+        //"Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 5.2; .NET CLR 1.0.3705;)"; 
+        //"Mozilla/4.0 (compatible; MSIE 6.0;)"; 
+
         private bool imageUpdated = false;
         private bool tagsUpdated = false;
         public bool runInBackground = false;
@@ -47,11 +53,11 @@ namespace CoverArtJobby
         {
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
-
+            
             this.Hide();
             InitializeComponent();
 
+            
         }
 
         public void postSetup()
@@ -466,8 +472,7 @@ namespace CoverArtJobby
                     ServicePointManager.Expect100Continue = true;
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                     
-                    webClient.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; " +
-                                  "Windows NT 5.2; .NET CLR 1.0.3705;)");
+                    webClient.Headers.Add("user-agent", userAgent);
 
                     byte[] data = webClient.DownloadData(uri);
                     MemoryStream ms = new MemoryStream(data);
@@ -727,13 +732,52 @@ namespace CoverArtJobby
             if (chkEmbedSearch.IsChecked == true)
             {
                 webFrame.Visibility = System.Windows.Visibility.Visible;
-                webFrame.Source = new Uri(URL);
+                HideScriptErrors(webFrame, true);
+
+                webFrame.Navigate(URL, null, null, "User-Agent: " + userAgent);
+                //webFrame.Source = new Uri(URL);
             }
             else
             {
                 System.Diagnostics.Process.Start(URL);
             }
 
+        }
+
+        public void HideScriptErrors(WebBrowser wb, bool Hide)
+        {
+            FieldInfo fiComWebBrowser = typeof(WebBrowser)
+                .GetField("_axIWebBrowser2",
+                          BindingFlags.Instance | BindingFlags.NonPublic);
+            if (fiComWebBrowser == null) return;
+            object objComWebBrowser = fiComWebBrowser.GetValue(wb);
+            if (objComWebBrowser == null) return;
+            objComWebBrowser.GetType().InvokeMember(
+                "Silent", BindingFlags.SetProperty, null, objComWebBrowser,
+                new object[] { Hide });
+        }
+
+        /// <summary>
+        /// Stuff some extra js on the end of a call to stop any javascript errors
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void Browser_OnLoadCompleted(object sender, NavigationEventArgs e)
+        {
+            var browser = sender as WebBrowser;
+
+            if (browser == null || browser.Document == null)
+                return;
+
+            dynamic document = browser.Document;
+
+            if (document.readyState != "complete")
+                return;
+
+            dynamic script = document.createElement("script");
+            script.type = @"text/javascript";
+            script.text = @"window.onerror = function(msg,url,line){return true;}";
+            document.head.appendChild(script);
         }
 
         #region rightbuttons
@@ -825,6 +869,7 @@ namespace CoverArtJobby
 
 
         #endregion
+
 
     }
 }

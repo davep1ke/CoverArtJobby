@@ -45,13 +45,14 @@
         <CheckBox Content="Keep Backup?" Height="16" HorizontalAlignment="Right" Margin="0,18,13,0" Name="chk_Backup" VerticalAlignment="Top" Width="120" IsChecked="True" />
         <TextBox Height="23" Margin="0,36,36,0" Name="txtBackupFolder" VerticalAlignment="Top" HorizontalAlignment="Right" Width="96" />
         <Button Content="..." Height="23" HorizontalAlignment="Right" Margin="0,36,13,0" Name="btnPickFolder" VerticalAlignment="Top" Width="17" Click="btnPickFolder_Click" />
-        <Frame x:Name="webFrame" Content="Frame" HorizontalAlignment="Stretch" Margin="290,259,12,41" VerticalAlignment="Stretch" />
+        <!--Frame x:Name="webFrame" Content="Frame" HorizontalAlignment="Stretch" Margin="290,259,12,41" VerticalAlignment="Stretch" /-->
+        <WebBrowser x:Name="webFrame" HorizontalAlignment="Stretch" Margin="290,259,12,41" VerticalAlignment="Stretch" LoadCompleted="Browser_OnLoadCompleted" />
         <StatusBar x:Name="w_status" Margin="0,0,415,0" Height="31" VerticalAlignment="Bottom">
             <TextBlock x:Name="lbl_status" Width="158" TextTrimming="CharacterEllipsis"/>
         </StatusBar>
         <Button x:Name="button" Content="📂" Height="23" Margin="248,255,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="30" Click="btn_OpenFolder_Click"/>
 
-        <!--WebBrowser HorizontalAlignment="Stretch" Margin="290,259,12,41" Name="webFrame" VerticalAlignment="Stretch" GotFocus="webFrame_GotFocus" LostFocus="webFrame_LostFocus" /-->
+        
 
 
     </Grid>
