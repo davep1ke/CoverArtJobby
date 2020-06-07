@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -15,7 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Text.RegularExpressions;
-using System.IO;
+using System.Diagnostics;
 using System.Web;
 using System.Net;
 using Id3Lib;
@@ -44,9 +45,12 @@ namespace CoverArtJobby
 
         public MainWindow()
         {
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+
             this.Hide();
             InitializeComponent();
-            
 
         }
 
@@ -459,6 +463,12 @@ namespace CoverArtJobby
             {
                 using (WebClient webClient = new WebClient())
                 {
+                    ServicePointManager.Expect100Continue = true;
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                    
+                    webClient.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; " +
+                                  "Windows NT 5.2; .NET CLR 1.0.3705;)");
+
                     byte[] data = webClient.DownloadData(uri);
                     MemoryStream ms = new MemoryStream(data);
                     System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
@@ -523,7 +533,7 @@ namespace CoverArtJobby
                         html = System.Text.Encoding.ASCII.GetString(buffer);
                     }
                 }
-                // Using a regex to parse HTML, but JUST FOR THIS EXAMPLE :-)
+                // Using a basic regex to parse HTML
                 var match = new Regex(@"<img[^>]*src=""([^""]*)""", RegexOptions.IgnoreCase).Match(html);
                 if (match.Success)
                 {
@@ -554,7 +564,9 @@ namespace CoverArtJobby
                         }
                     }
 
+                    //Samples: 
                     //< IMG width = "432" height = "432" id = "irc_mi" style = "margin-top: 0px;" onload = "typeof google==='object'&amp;&amp;google.aft&amp;&amp;google.aft(this)" alt = "Image result for Aperio  Mindfield   Seasons Changing" src = "https://i1.sndcdn.com/artworks-000298160676-shcuz7-t500x500.jpg" ></ A >< !--EndFragment-- ></ DIV ></ BODY ></ HTML >
+                    //<IMGclass="n3VNCb"style="margin:0px;width:585px;height:585px;"alt="Identities2(2020,File)|Discogs"src="https://img.discogs.com/wzI0NTRfX35BLMsrm-c1gFSY-qU=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/R-15423379-1591302400-6122.jpeg.jpg
 
 
                 }
@@ -703,7 +715,10 @@ namespace CoverArtJobby
             //remove hyphens - google assumes it is to ignore next term
             searchString = searchString.Replace("-", " ");
 
-            string URL = "https://www.google.co.uk/search?safe=off&source=lnms&tbm=isch&tbs=imgo:1&q=";
+            //string URL = "https://www.google.co.uk/search?safe=off&source=lnms&tbm=isch&tbs=imgo:1&q=";
+
+            string URL = "https://www.google.com/search?safe=off&tbm=isch&q=";
+
             URL += Uri.EscapeUriString(searchString);
 
             //string cleaned = 
@@ -721,7 +736,7 @@ namespace CoverArtJobby
 
         }
 
-        #region righbuttons
+        #region rightbuttons
 
         private void btnSaveTag_Click(object sender, RoutedEventArgs e)
         {
@@ -788,39 +803,28 @@ namespace CoverArtJobby
             return false;
         }
 
+        private void btn_OpenFolder_Click(object sender, RoutedEventArgs e)
+        {
+            TreeViewItem selectedItem = FolderBrowser.SelectedItem as TreeViewItem;
+            if (selectedItem != null && selectedItem.Tag is DirectoryInfo)
+            {
+                DirectoryInfo di = selectedItem.Tag as DirectoryInfo;
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    Arguments = di.FullName,
+                    FileName = "explorer.exe"
+                };
 
+            Process.Start(startInfo);
+        }
 
-
-
-
-
+    }
 
 
 
 
 
         #endregion
-    /*    //FML
-        private void webFrame_GotFocus(object sender, RoutedEventArgs e)
-        {
-            browserHasFocus = true;
-            setButtons(true);
-        }
 
-
-
-        private void webFrame_LostFocus(object sender, RoutedEventArgs e)
-        {
-            browserHasFocus = false;
-            setButtons(false);
-        }
-
-        private void setButtons(bool enable)
-        {
-            btn_SaveAndNext.IsEnabled = enable;
-            btn_SaveNextEmpty.IsEnabled = enable;
-            btnNextEmpty.IsEnabled = enable;
-            btnSaveTag.IsEnabled = enable;
-        }*/
     }
 }
