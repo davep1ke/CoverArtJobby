@@ -57,9 +57,9 @@ namespace CoverArtJobby
             
             this.Hide();
             InitializeComponent();
-            
 
-            
+            webFrame.BeginInit();
+
 
         }
 
@@ -736,7 +736,7 @@ namespace CoverArtJobby
             if (chkEmbedSearch.IsChecked == true)
             {
                 webFrame.Visibility = System.Windows.Visibility.Visible;
-                webFrame.BeginInit();
+                
 
                 //HideScriptErrors(webFrame, true);
 
