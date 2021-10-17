@@ -31,7 +31,8 @@ namespace CoverArtJobby
     /// </summary>
     public partial class MainWindow : Window
     {
-        public static string userAgent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko";
+        public static string userAgent = "Mozilla / 5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/93.0";
+        //public static string userAgent = "Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko";
         // "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/6.0;)"; 
         //"Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 5.2; .NET CLR 1.0.3705;)"; 
         //"Mozilla/4.0 (compatible; MSIE 6.0;)"; 
@@ -56,12 +57,15 @@ namespace CoverArtJobby
             
             this.Hide();
             InitializeComponent();
+            
 
             
+
         }
 
         public void postSetup()
         {
+            
             populate_Treeview_Drives();
 
             //go to the scan folder
@@ -472,7 +476,7 @@ namespace CoverArtJobby
                     ServicePointManager.Expect100Continue = true;
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                     
-                    webClient.Headers.Add("user-agent", userAgent);
+ //                   webClient.Headers.Add("user-agent", userAgent);
 
                     byte[] data = webClient.DownloadData(uri);
                     MemoryStream ms = new MemoryStream(data);
@@ -732,9 +736,12 @@ namespace CoverArtJobby
             if (chkEmbedSearch.IsChecked == true)
             {
                 webFrame.Visibility = System.Windows.Visibility.Visible;
-                HideScriptErrors(webFrame, true);
+                webFrame.BeginInit();
 
-                webFrame.Navigate(URL, null, null, "User-Agent: " + userAgent);
+                //HideScriptErrors(webFrame, true);
+
+                //webFrame .CoreWebView2.Settings.UserAgent = userAgent;
+                webFrame.Load(URL);//, null, null, "User-Agent: " + userAgent
                 //webFrame.Source = new Uri(URL);
             }
             else
@@ -744,7 +751,7 @@ namespace CoverArtJobby
 
         }
 
-        public void HideScriptErrors(WebBrowser wb, bool Hide)
+        /*public void HideScriptErrors(WebView2 wb, bool Hide)
         {
             FieldInfo fiComWebBrowser = typeof(WebBrowser)
                 .GetField("_axIWebBrowser2",
@@ -755,14 +762,14 @@ namespace CoverArtJobby
             objComWebBrowser.GetType().InvokeMember(
                 "Silent", BindingFlags.SetProperty, null, objComWebBrowser,
                 new object[] { Hide });
-        }
+        }*/
 
-        /// <summary>
-        /// Stuff some extra js on the end of a call to stop any javascript errors
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        void Browser_OnLoadCompleted(object sender, NavigationEventArgs e)
+    /// <summary>
+    /// Stuff some extra js on the end of a call to stop any javascript errors
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    void Browser_OnLoadCompleted(object sender, NavigationEventArgs e)
         {
             var browser = sender as WebBrowser;
 
