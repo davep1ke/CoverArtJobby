@@ -52,7 +52,7 @@ namespace CoverArtJobby
                 //Other, unexpected arg
                 else if (arg == nextArg.blank)
                 {
-                    MessageBox.Show("wrong argument " + thisStr + ". scan_folder, backup_folder, destination_folder, recurse, background"); //TODO - proper help
+                    MessageBox.Show("wrong argument " + thisStr + ".\n\r Options: scan_folder, backup_folder, destination_folder, recurse, background"); //TODO - proper help
                     cancel = true;
                     
                 }

@@ -19,9 +19,9 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Web;
 using System.Net;
-using Id3Lib;
+using ATL;
 using System.Reflection;
-using Mp3Lib;
+using CefSharp.Wpf;
 
 namespace CoverArtJobby
 {
@@ -40,7 +40,7 @@ namespace CoverArtJobby
         private bool imageUpdated = false;
         private bool tagsUpdated = false;
         public bool runInBackground = false;
-        Mp3File file = null;
+        Track audioFile = null;
 
         //class var to prevent memory leakage
         private Bitmap imageBitmap;
@@ -54,7 +54,11 @@ namespace CoverArtJobby
         {
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            
+
+            CefSettings settings = new CefSettings();
+            settings.CachePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Name +  @"\CEF";
+            CefSharp.Cef.Initialize(settings);
+
             this.Hide();
             InitializeComponent();
 
@@ -328,25 +332,25 @@ namespace CoverArtJobby
 
                 //open the file (peek at it, then close, to make sure we don't OOM
                 FileInfo fi = FileList.Items[currentIndex] as FileInfo;
-                Mp3File peekFile = new Mp3File(fi);
+                Track peekFile = new Track(fi.FullName) ;
                
 
                 //check for unsupported tags
                 try
                 {
-                    if (peekFile.TagHandler.Picture == null)
+                    if (peekFile.EmbeddedPictures.Count == 0)
                     {
                         //null test to see if the picture errors. Probably not needed
                     }
                 }
                 catch (NotImplementedException e)
                 {
-                    MessageBox.Show("Invalid tag on " + peekFile.FileName + " - " + e.Message);
+                    MessageBox.Show("Invalid tag on " + peekFile.Path  + " - " + e.Message);
                     invalidTag = true;
                 }
                 catch (System.IO.IOException e)
                 {
-                    MessageBox.Show("IO Error on " + peekFile.FileName + " - " + e.Message);
+                    MessageBox.Show("IO Error on " + peekFile.Path + " - " + e.Message);
                     invalidTag = true;
                 }
 
@@ -356,7 +360,7 @@ namespace CoverArtJobby
                 if (missingArt) //looking for next file with missing artwork
                 {
                     //skip invalid tags
-                    if (!invalidTag && peekFile.TagHandler.Picture == null)
+                    if (!invalidTag && peekFile.EmbeddedPictures.Count() == 0)
                     {
                         FileList.SelectedIndex = currentIndex;
                         exit = true;
@@ -398,36 +402,39 @@ namespace CoverArtJobby
                 {
                     FileInfo fi = FileList.SelectedItems[0] as FileInfo;
 
-                    if (file != null) { file = null; }
+                    if (audioFile != null) { audioFile = null; }
 
-                    file = new Mp3File(fi);
+                    audioFile = new Track(fi.FullName);
                     Tag_File.Text = fi.Name;
 
                     
-                    if ( file.TagHandler.Picture != null)
+                    if ( audioFile.EmbeddedPictures.Count() > 0)
                     {
-                        SetImageFromBitmap(file.TagHandler.Picture, false);
+
+                        // Get (first) picture 
+                        PictureInfo pic  = audioFile.EmbeddedPictures[0];
+                        System.Drawing.Image image = System.Drawing.Image.FromStream(new System.IO.MemoryStream(pic.PictureData));
+                        SetImageFromBitmap(image, false);
                     }
                     else
                     {
                         Tag_Image.Source = null;
                     }
-                    Tag_Album.Text = file.TagHandler.Album;
-                    Tag_Artist.Text = file.TagHandler.Artist;
-                    
-                    Tag_Song.Text = file.TagHandler.Song;
+                    Tag_Album.Text = audioFile.Album;
+                    Tag_Artist.Text = audioFile.Artist;
+                    Tag_Song.Text = audioFile.Title;
                     imageUpdated = false;
                     tagsUpdated = false;
 
                     webFrame.Visibility = System.Windows.Visibility.Hidden;
 
                 }
-                catch (Id3Lib.Exceptions.TagNotFoundException)
+                /*catch (Id3Lib.Exceptions.TagNotFoundException)
                 {
                     //drop out if no tag. Should still be able to write one.
 
-                    file = null;
-                }
+                    audioFile = null;
+                }*/
                 catch (System.IO.IOException)
                 {
                     lbl_status.Text = "Error reading file.";
@@ -590,7 +597,7 @@ namespace CoverArtJobby
 
         public void saveTags()
         {
-            if (file == null)
+            if (audioFile == null)
             {
                 lbl_status.Text = "No file is currently selected!";
                 return;
@@ -600,21 +607,29 @@ namespace CoverArtJobby
             {
                 System.Drawing.Image image = Tag_Image.Tag as System.Drawing.Image;
                 //Bitmap b = Tag_Image.Tag as Bitmap;
-                
-                file.TagHandler.Picture = image;
+
+                //Remove all images. 
+                //TODO - removing all images might be a bit aggressive.
+                audioFile.EmbeddedPictures.Clear();
+
+                //add the new image (bitmap format?)
+                System.IO.MemoryStream ms = new MemoryStream();
+                image.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                PictureInfo newPicture = PictureInfo.fromBinaryData(ms.ToArray(), PictureInfo.PIC_TYPE.CD);
+                audioFile.EmbeddedPictures.Add(newPicture);
             }
 
             if (tagsUpdated)
             {
-                file.TagHandler.Album = Tag_Album.Text;
-                file.TagHandler.Artist = Tag_Artist.Text;
-                file.TagHandler.Song = Tag_Song.Text;
+                audioFile.Album = Tag_Album.Text;
+                audioFile.Artist = Tag_Artist.Text;
+                audioFile.Title = Tag_Song.Text;
             }
             
             //check our paths exist and files don't before we start. 
-            string bakName = System.IO.Path.ChangeExtension(file.FileName, "bak");
+            string bakName = System.IO.Path.ChangeExtension(audioFile.Path, "bak");
             FileInfo bakfile = new FileInfo(bakName);
-            string backupLocation = backupDirectory.FullName + @"\" + System.IO.Path.GetFileName(file.FileName);
+            string backupLocation = backupDirectory.FullName + @"\" + System.IO.Path.GetFileName(audioFile.Path);
 
             if (backupDirectory.Exists == false)
             {
@@ -630,7 +645,7 @@ namespace CoverArtJobby
 
 
             //save the file. Creates a .bak in the source dir
-            file.Update();
+            audioFile.Save();
 
             //move / delete any bak files                
             if (bakfile.Exists)
@@ -650,8 +665,8 @@ namespace CoverArtJobby
             //if it's null, it was never set, therefore we dont move the file. If its !exists, it was set, but isnt a valid folder. 
             if (destinationDirectory != null)
             {
-                FileInfo fi = new FileInfo(file.FileName);
-                file = null;
+                FileInfo fi = new FileInfo(audioFile.Path);
+                audioFile = null;
                 fi.MoveTo(destinationDirectory.FullName + "\\" + fi.Name);
                     
                    
