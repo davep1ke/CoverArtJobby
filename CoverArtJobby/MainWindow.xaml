@@ -16,7 +16,7 @@
                 </Style>
             </TreeView.ItemContainerStyle>
         </TreeView>
-        <ListBox HorizontalAlignment="Left" Margin="12,281,0,0" Name="FileList" Width="266" SelectionMode="Extended" SelectionChanged="FileList_SelectionChanged" Height="437" VerticalAlignment="Top" />
+        <ListBox HorizontalAlignment="Left" Margin="12,281,0,51" Name="FileList" Width="266" SelectionMode="Extended" SelectionChanged="FileList_SelectionChanged" />
         <GroupBox Header="Current Tag" Height="235" HorizontalAlignment="Left" Margin="284,18,0,0" Name="grpCurrentTag" VerticalAlignment="Top" Width="396">
             <Grid>
                 <Label Content="File" Height="28" HorizontalAlignment="Left" Margin="12,44,0,0" Name="label1" VerticalAlignment="Top" />
@@ -55,7 +55,7 @@
         </StatusBar>
         <Button x:Name="button" Content="📂" Height="23" Margin="248,255,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="30" Click="btn_OpenFolder_Click"/>
 
-        
+
 
 
     </Grid>
